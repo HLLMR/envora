@@ -33,6 +33,11 @@ public sealed class ProjectsService(HttpClient http) : IProjectsService
         var result = await http.GetFromJsonAsync<DashboardStatsDto>("api/v1/projects/dashboard/stats", ct);
         return result ?? new DashboardStatsDto();
     }
+
+    public async Task<ProjectDetailDto?> GetDetailAsync(Guid projectId, CancellationToken ct)
+    {
+        return await http.GetFromJsonAsync<ProjectDetailDto>($"api/v1/projects/{projectId}/detail", ct);
+    }
 }
 
 

@@ -16,6 +16,8 @@ public interface IProjectService
 
     Task<ProjectListItemDto?> GetAsync(Guid projectId, CancellationToken ct);
 
+    Task<ProjectDetailDto?> GetDetailAsync(Guid projectId, CancellationToken ct);
+
     Task<ProjectListItemDto> CreateAsync(CreateProjectRequest request, CancellationToken ct);
 
     Task<ProjectListItemDto?> UpdateAsync(Guid projectId, UpdateProjectRequest request, CancellationToken ct);

@@ -28,6 +28,13 @@ public sealed class ProjectsController(IProjectService projects) : ControllerBas
         return project is null ? NotFound() : Ok(project);
     }
 
+    [HttpGet("{projectId:guid}/detail")]
+    public async Task<IActionResult> GetDetail([FromRoute] Guid projectId, CancellationToken ct)
+    {
+        var project = await projects.GetDetailAsync(projectId, ct);
+        return project is null ? NotFound() : Ok(project);
+    }
+
     [HttpPost]
     public async Task<IActionResult> Create([FromBody] CreateProjectRequest request, CancellationToken ct)
     {

@@ -1,0 +1,191 @@
+@page "/projects/{ProjectId:guid}/overview"
+
+<PageTitle>Project Overview</PageTitle>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+    </div>
+}
+else if (project == null)
+{
+    <div class="alert alert-warning">Project not found.</div>
+}
+else
+{
+    <div class="d-flex align-items-center justify-content-between mb-4">
+        <div>
+            <h1 class="h4 mb-1">@project.ProjectName</h1>
+            <div class="text-secondary small">@project.ProjectNumber</div>
+        </div>
+        <div>
+            <span class="badge @GetStatusBadgeClass(project.Status)">@project.Status</span>
+        </div>
+    </div>
+
+    <!-- Discipline Navigation -->
+    <div class="card mb-4">
+        <div class="card-body">
+            <div class="text-secondary small mb-2">Disciplines</div>
+            <div class="d-flex gap-2 flex-wrap">
+                <a class="btn btn-sm btn-primary" href="@($"/projects/{ProjectId}/overview")">Overview</a>
+                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/financial")">Financial</a>
+                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/schedule")">Schedule</a>
+                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/design/equipment")">Design</a>
+                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/service")">Service</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="row g-4">
+        <!-- Project Information -->
+        <div class="col-12 col-lg-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Project Information</h5>
+                </div>
+                <div class="card-body">
+                    <dl class="row mb-0">
+                        <dt class="col-sm-4">Description</dt>
+                        <dd class="col-sm-8">@(project.Description ?? "-")</dd>
+
+                        <dt class="col-sm-4">Status</dt>
+                        <dd class="col-sm-8">
+                            <span class="badge @GetStatusBadgeClass(project.Status)">@project.Status</span>
+                        </dd>
+
+                        <dt class="col-sm-4">Start Date</dt>
+                        <dd class="col-sm-8">@(project.StartDate?.ToString("MMM d, yyyy") ?? "-")</dd>
+
+                        <dt class="col-sm-4">Estimated Completion</dt>
+                        <dd class="col-sm-8">@(project.EstimatedCompletion?.ToString("MMM d, yyyy") ?? "-")</dd>
+
+                        @if (project.ActualCompletion.HasValue)
+                        {
+                            <dt class="col-sm-4">Actual Completion</dt>
+                            <dd class="col-sm-8">@project.ActualCompletion.Value.ToString("MMM d, yyyy")</dd>
+                        }
+
+                        <dt class="col-sm-4">Budget</dt>
+                        <dd class="col-sm-8">@(project.BudgetAmount?.ToString("C") ?? "-")</dd>
+
+                        <dt class="col-sm-4">Location</dt>
+                        <dd class="col-sm-8">@(project.Location ?? "-")</dd>
+
+                        <dt class="col-sm-4">Building Type</dt>
+                        <dd class="col-sm-8">@(project.BuildingType ?? "-")</dd>
+
+                        @if (project.SquareFootage.HasValue)
+                        {
+                            <dt class="col-sm-4">Square Footage</dt>
+                            <dd class="col-sm-8">@project.SquareFootage.Value.ToString("N0")</dd>
+                        }
+
+                        <dt class="col-sm-4">Customer</dt>
+                        <dd class="col-sm-8">@(project.CustomerName ?? "-")</dd>
+
+                        <dt class="col-sm-4">Engineering Firm</dt>
+                        <dd class="col-sm-8">@(project.EngineeringFirmName ?? "-")</dd>
+                    </dl>
+                </div>
+            </div>
+        </div>
+
+        <!-- Team Assignments -->
+        <div class="col-12 col-lg-4">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">Team</h5>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <div class="text-secondary small mb-1">Project Manager</div>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(project.ProjectManagerName))
+                            {
+                                <div>@project.ProjectManagerName</div>
+                                @if (!string.IsNullOrWhiteSpace(project.ProjectManagerEmail))
+                                {
+                                    <div class="text-secondary small">@project.ProjectManagerEmail</div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not assigned</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="text-secondary small mb-1">Design Engineer 1</div>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(project.DesignEngineer1Name))
+                            {
+                                <div>@project.DesignEngineer1Name</div>
+                                @if (!string.IsNullOrWhiteSpace(project.DesignEngineer1Email))
+                                {
+                                    <div class="text-secondary small">@project.DesignEngineer1Email</div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not assigned</span>
+                            }
+                        </div>
+                    </div>
+
+                    <div>
+                        <div class="text-secondary small mb-1">Design Engineer 2</div>
+                        <div>
+                            @if (!string.IsNullOrWhiteSpace(project.DesignEngineer2Name))
+                            {
+                                <div>@project.DesignEngineer2Name</div>
+                                @if (!string.IsNullOrWhiteSpace(project.DesignEngineer2Email))
+                                {
+                                    <div class="text-secondary small">@project.DesignEngineer2Email</div>
+                                }
+                            }
+                            else
+                            {
+                                <span class="text-secondary">Not assigned</span>
+                            }
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Notes Panel -->
+    <NotesPanelComponent ProjectId="@ProjectId" Context="OVERVIEW:Summary" />
+}
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Inject] private IProjectsService Projects { get; set; } = null!;
+
+    private bool isLoading = true;
+    private ProjectDetailDto? project;
+
+    protected override async Task OnInitializedAsync()
+    {
+        project = await Projects.GetDetailAsync(ProjectId, CancellationToken.None);
+        isLoading = false;
+    }
+
+    private string GetStatusBadgeClass(string? status)
+    {
+        return status?.ToLowerInvariant() switch
+        {
+            "active" or "in progress" or "design" or "installation" => "text-bg-primary",
+            "completed" or "complete" => "text-bg-success",
+            "on hold" or "awarded" => "text-bg-warning",
+            "cancelled" => "text-bg-danger",
+            _ => "text-bg-secondary"
+        };
+    }
+}
+

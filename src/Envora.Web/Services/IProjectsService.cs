@@ -10,6 +10,8 @@ public interface IProjectsService
     Task<ProjectListItemDto> CreateAsync(CreateProjectRequest request, CancellationToken ct);
 
     Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct);
+
+    Task<ProjectDetailDto?> GetDetailAsync(Guid projectId, CancellationToken ct);
 }
 
 

@@ -81,6 +81,58 @@ public sealed class ProjectService(EnvoraDbContext db) : IProjectService
             .SingleOrDefaultAsync(ct);
     }
 
+    public async Task<ProjectDetailDto?> GetDetailAsync(Guid projectId, CancellationToken ct)
+    {
+        var project = await db.Projects.AsNoTracking()
+            .Include(p => p.Customer)
+            .Include(p => p.EngineeringFirm)
+            .Include(p => p.ProjectManager)
+            .Include(p => p.DesignEngineer1)
+            .Include(p => p.DesignEngineer2)
+            .Where(p => p.ProjectId == projectId)
+            .SingleOrDefaultAsync(ct);
+
+        if (project == null) return null;
+
+        return new ProjectDetailDto
+        {
+            ProjectId = project.ProjectId,
+            ProjectNumber = project.ProjectNumber,
+            ProjectName = project.ProjectName,
+            Description = project.Description,
+            Status = project.Status,
+            CustomerId = project.CustomerId,
+            CustomerName = project.Customer?.CompanyName,
+            EngineeringFirmId = project.EngineeringFirmId,
+            EngineeringFirmName = project.EngineeringFirm?.CompanyName,
+            StartDate = project.StartDate,
+            EstimatedCompletion = project.EstimatedCompletion,
+            ActualCompletion = project.ActualCompletion,
+            BudgetAmount = project.BudgetAmount,
+            ProjectManagerId = project.ProjectManagerId,
+            ProjectManagerName = project.ProjectManager != null 
+                ? $"{project.ProjectManager.FirstName} {project.ProjectManager.LastName}".Trim()
+                : null,
+            ProjectManagerEmail = project.ProjectManager?.Email,
+            DesignEngineer1Id = project.DesignEngineer1Id,
+            DesignEngineer1Name = project.DesignEngineer1 != null
+                ? $"{project.DesignEngineer1.FirstName} {project.DesignEngineer1.LastName}".Trim()
+                : null,
+            DesignEngineer1Email = project.DesignEngineer1?.Email,
+            DesignEngineer2Id = project.DesignEngineer2Id,
+            DesignEngineer2Name = project.DesignEngineer2 != null
+                ? $"{project.DesignEngineer2.FirstName} {project.DesignEngineer2.LastName}".Trim()
+                : null,
+            DesignEngineer2Email = project.DesignEngineer2?.Email,
+            Location = project.Location,
+            BuildingType = project.BuildingType,
+            SquareFootage = project.SquareFootage,
+            Notes = project.Notes,
+            CreatedAt = project.CreatedAt,
+            UpdatedAt = project.UpdatedAt
+        };
+    }
+
     public async Task<ProjectListItemDto> CreateAsync(CreateProjectRequest request, CancellationToken ct)
     {
         var now = DateTime.UtcNow;
