@@ -1,6 +1,8 @@
 @using Envora.Web.Models.Notes
 @using Envora.Web.Services
+@implements IAsyncDisposable
 @inject INotesService NotesService
+@inject IHubConnectionService HubService
 
 <div class="notes-panel border-top mt-4 pt-3">
     <div class="d-flex align-items-center justify-content-between mb-3">
@@ -94,6 +96,24 @@
 
     protected override async Task OnInitializedAsync()
     {
+        // Subscribe to SignalR events
+        HubService.OnNoteAdded += HandleNoteAdded;
+        HubService.OnNoteUpdated += HandleNoteUpdated;
+        HubService.OnNoteDeleted += HandleNoteDeleted;
+        HubService.OnReactionAdded += HandleReactionAdded;
+
+        // Connect and subscribe to project
+        try
+        {
+            await HubService.ConnectAsync();
+            await HubService.SubscribeToProjectAsync(ProjectId);
+        }
+        catch (Exception ex)
+        {
+            // Log error but continue - notes will still work via REST API
+            Console.WriteLine($"SignalR connection failed: {ex.Message}");
+        }
+
         await LoadNotesAsync();
     }
 
@@ -165,6 +185,64 @@
         {
             // Silently fail for now
         }
+    }
+
+    private void HandleNoteAdded(NoteDto note)
+    {
+        // Only add if it matches our context
+        if (note.ContentContext == Context || (Context == null && note.ContentContext == null))
+        {
+            if (!notes.Any(n => n.NoteId == note.NoteId))
+            {
+                notes.Insert(0, note);
+                InvokeAsync(StateHasChanged);
+            }
+        }
+    }
+
+    private void HandleNoteUpdated(NoteDto note)
+    {
+        var existing = notes.FirstOrDefault(n => n.NoteId == note.NoteId);
+        if (existing != null)
+        {
+            existing.Content = note.Content;
+            existing.EditedAt = note.EditedAt;
+            existing.Reactions = note.Reactions;
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    private void HandleNoteDeleted(Guid noteId)
+    {
+        notes.RemoveAll(n => n.NoteId == noteId);
+        InvokeAsync(StateHasChanged);
+    }
+
+    private void HandleReactionAdded(Guid noteId, Guid userId, string emoji)
+    {
+        var note = notes.FirstOrDefault(n => n.NoteId == noteId);
+        if (note != null)
+        {
+            // Increment reaction count
+            if (note.Reactions.ContainsKey(emoji))
+            {
+                note.Reactions[emoji]++;
+            }
+            else
+            {
+                note.Reactions[emoji] = 1;
+            }
+            InvokeAsync(StateHasChanged);
+        }
+    }
+
+    public async ValueTask DisposeAsync()
+    {
+        HubService.OnNoteAdded -= HandleNoteAdded;
+        HubService.OnNoteUpdated -= HandleNoteUpdated;
+        HubService.OnNoteDeleted -= HandleNoteDeleted;
+        HubService.OnReactionAdded -= HandleReactionAdded;
+        await HubService.UnsubscribeFromProjectAsync(ProjectId);
     }
 }
 
