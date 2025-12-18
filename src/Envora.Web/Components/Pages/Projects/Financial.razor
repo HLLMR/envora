@@ -1,0 +1,40 @@
+@page "/projects/{ProjectId:guid}/financial"
+
+<PageTitle>Financial</PageTitle>
+
+<div class="d-flex align-items-center justify-content-between mb-4">
+    <div>
+        <h1 class="h4 mb-1">Financial</h1>
+        <div class="text-secondary small">Project: @ProjectId</div>
+    </div>
+</div>
+
+<!-- Discipline Navigation -->
+<div class="card mb-4">
+    <div class="card-body">
+        <div class="text-secondary small mb-2">Disciplines</div>
+        <div class="d-flex gap-2 flex-wrap">
+            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/overview")">Overview</a>
+            <a class="btn btn-sm btn-primary" href="@($"/projects/{ProjectId}/financial")">Financial</a>
+            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/schedule")">Schedule</a>
+            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/design/equipment")">Design</a>
+            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/service")">Service</a>
+        </div>
+    </div>
+</div>
+
+<div class="card">
+    <div class="card-body">
+        <div class="text-center py-5 text-secondary">
+            <p class="mb-0">Financial discipline coming soon.</p>
+            <p class="small mt-2">This will include contracts, budget, costs, change orders, and invoices.</p>
+        </div>
+    </div>
+</div>
+
+<NotesPanelComponent ProjectId="@ProjectId" Context="FINANCIAL:Summary" />
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+}
+
