@@ -12,6 +12,8 @@ public interface IProjectsService
     Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct);
 
     Task<ProjectDetailDto?> GetDetailAsync(Guid projectId, CancellationToken ct);
+
+    Task<ProjectListItemDto?> UpdateAsync(Guid projectId, UpdateProjectRequest request, CancellationToken ct);
 }
 
 

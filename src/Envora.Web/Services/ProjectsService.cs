@@ -38,6 +38,14 @@ public sealed class ProjectsService(HttpClient http) : IProjectsService
     {
         return await http.GetFromJsonAsync<ProjectDetailDto>($"api/v1/projects/{projectId}/detail", ct);
     }
+
+    public async Task<ProjectListItemDto?> UpdateAsync(Guid projectId, UpdateProjectRequest request, CancellationToken ct)
+    {
+        var res = await http.PutAsJsonAsync($"api/v1/projects/{projectId}", request, ct);
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        res.EnsureSuccessStatusCode();
+        return await res.Content.ReadFromJsonAsync<ProjectListItemDto>(cancellationToken: ct);
+    }
 }
 
 

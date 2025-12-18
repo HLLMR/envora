@@ -21,10 +21,95 @@ else
             <h1 class="h4 mb-1">@project.ProjectName</h1>
             <div class="text-secondary small">@project.ProjectNumber</div>
         </div>
-        <div>
+        <div class="d-flex gap-2 align-items-center">
             <span class="badge @GetStatusBadgeClass(project.Status)">@project.Status</span>
+            <button class="btn btn-sm btn-outline-primary" @onclick="ShowEditModal">Edit</button>
         </div>
     </div>
+
+    <!-- Edit Modal -->
+    @if (showEditModal)
+    {
+        <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+            <div class="modal-dialog modal-lg">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title">Edit Project</h5>
+                        <button type="button" class="btn-close" @onclick="HideEditModal"></button>
+                    </div>
+                    <div class="modal-body">
+                        <EditForm Model="@editRequest" OnValidSubmit="HandleUpdate">
+                            <DataAnnotationsValidator />
+                            <div class="mb-3">
+                                <label class="form-label">Project Name *</label>
+                                <InputText class="form-control" @bind-Value="editRequest.ProjectName" />
+                                <ValidationMessage For="() => editRequest.ProjectName" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Description</label>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="editRequest.Description" />
+                            </div>
+                            <div class="row g-3">
+                                <div class="col-md-6">
+                                    <label class="form-label">Status *</label>
+                                    <InputSelect class="form-select" @bind-Value="editRequest.Status">
+                                        <option value="Conceptual">Conceptual</option>
+                                        <option value="Design">Design</option>
+                                        <option value="Bidding">Bidding</option>
+                                        <option value="Awarded">Awarded</option>
+                                        <option value="Procurement">Procurement</option>
+                                        <option value="Installation">Installation</option>
+                                        <option value="Startup">Startup</option>
+                                        <option value="Complete">Complete</option>
+                                    </InputSelect>
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Budget Amount</label>
+                                    <InputNumber class="form-control" @bind-Value="editRequest.BudgetAmount" />
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-4">
+                                    <label class="form-label">Start Date</label>
+                                    <InputDate class="form-control" @bind-Value="editRequest.StartDate" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Estimated Completion</label>
+                                    <InputDate class="form-control" @bind-Value="editRequest.EstimatedCompletion" />
+                                </div>
+                                <div class="col-md-4">
+                                    <label class="form-label">Actual Completion</label>
+                                    <InputDate class="form-control" @bind-Value="editRequest.ActualCompletion" />
+                                </div>
+                            </div>
+                            <div class="row g-3 mt-2">
+                                <div class="col-md-6">
+                                    <label class="form-label">Location</label>
+                                    <InputText class="form-control" @bind-Value="editRequest.Location" />
+                                </div>
+                                <div class="col-md-6">
+                                    <label class="form-label">Building Type</label>
+                                    <InputText class="form-control" @bind-Value="editRequest.BuildingType" />
+                                </div>
+                            </div>
+                            <div class="mb-3 mt-3">
+                                <label class="form-label">Square Footage</label>
+                                <InputNumber class="form-control" @bind-Value="editRequest.SquareFootage" />
+                            </div>
+                            <div class="mb-3">
+                                <label class="form-label">Notes</label>
+                                <InputTextArea class="form-control" rows="3" @bind-Value="editRequest.Notes" />
+                            </div>
+                            <div class="d-flex justify-content-end gap-2">
+                                <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancel</button>
+                                <button type="submit" class="btn btn-primary" disabled="@isUpdating">@(isUpdating ? "Saving..." : "Save")</button>
+                            </div>
+                        </EditForm>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 
     <!-- Discipline Navigation -->
     <div class="card mb-4">
@@ -168,12 +253,71 @@ else
     [Inject] private IProjectsService Projects { get; set; } = null!;
 
     private bool isLoading = true;
+    private bool showEditModal = false;
+    private bool isUpdating = false;
     private ProjectDetailDto? project;
+    private UpdateProjectRequest editRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadProjectAsync();
+    }
+
+    private async Task LoadProjectAsync()
+    {
+        isLoading = true;
         project = await Projects.GetDetailAsync(ProjectId, CancellationToken.None);
         isLoading = false;
+    }
+
+    private void ShowEditModal()
+    {
+        if (project != null)
+        {
+            editRequest = new UpdateProjectRequest
+            {
+                ProjectName = project.ProjectName,
+                Description = project.Description,
+                Status = project.Status,
+                StartDate = project.StartDate,
+                EstimatedCompletion = project.EstimatedCompletion,
+                ActualCompletion = project.ActualCompletion,
+                BudgetAmount = project.BudgetAmount,
+                Location = project.Location,
+                BuildingType = project.BuildingType,
+                SquareFootage = project.SquareFootage,
+                Notes = project.Notes,
+                CustomerId = project.CustomerId,
+                EngineeringFirmId = project.EngineeringFirmId,
+                ProjectManagerId = project.ProjectManagerId,
+                DesignEngineer1Id = project.DesignEngineer1Id,
+                DesignEngineer2Id = project.DesignEngineer2Id
+            };
+            showEditModal = true;
+        }
+    }
+
+    private void HideEditModal()
+    {
+        showEditModal = false;
+    }
+
+    private async Task HandleUpdate()
+    {
+        isUpdating = true;
+        try
+        {
+            var updated = await Projects.UpdateAsync(ProjectId, editRequest, CancellationToken.None);
+            if (updated != null)
+            {
+                await LoadProjectAsync();
+                HideEditModal();
+            }
+        }
+        finally
+        {
+            isUpdating = false;
+        }
     }
 
     private string GetStatusBadgeClass(string? status)
