@@ -9,7 +9,7 @@ If something is unclear, **refer to the spec first**. If it is still ambiguous, 
 When documents disagree, use this priority:
 
 1. **Data model + DDL (authoritative)**:
-   - `.reference/ENVORA_TDS_COMPLETE_v3.0.md` (22 tables; corrected controllers/nodes/devices constraints)
+   - `.reference/ENVORA_TDS_COMPLETE_v3.0.md` (schema section contains 19 `CREATE TABLE` blocks; corrected controllers/nodes/devices constraints)
    - `.reference/DATA_MODEL_v3.0_READY_FOR_CURSOR.md` (summary + Phase 1 prompt)
 2. **Development standards**:
    - `.reference/DEVELOPMENT_WORKFLOW.md` (repo structure, naming, testing, CI/CD)
@@ -20,7 +20,7 @@ When documents disagree, use this priority:
    - `.reference/ENVORA_PRD.md`
    - `.reference/Envora UI UX Design Plan - v2.pdf`
 
-Note: some “summary” docs mention 13/18 tables. **We are using v3.0 (22 tables)** as the source of truth.
+Note: some “summary” docs mention 13/18 tables. We are using v3.0; the **DDL blocks currently define 19 tables**.
 
 ## 2) Non-negotiable platform decisions (locked by spec)
 
@@ -44,7 +44,7 @@ Note: some “summary” docs mention 13/18 tables. **We are using v3.0 (22 tabl
 ### Phase 1 (Weeks 1–2 in the bundle prompt / PRD “Core Platform”)
 
 - Establish repo structure per `.reference/DEVELOPMENT_WORKFLOW.md`
-- Implement database schema + EF model layer (v3.0 tables)
+- Implement database schema + EF model layer (v3.0 DDL blocks; 19 tables)
 - Implement core API CRUD:
   - Projects, Equipment, Devices, Controllers, Nodes, Points
 - Implement baseline Blazor shell:

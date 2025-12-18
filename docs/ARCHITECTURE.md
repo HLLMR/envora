@@ -24,6 +24,8 @@ Use **v3.0** corrected model as source of truth:
 - Soft point distribution (one-to-many distribution)
 - Collaboration (Notes + Reactions)
 - Operational traceability (Jobs + ActivityLogs)
+ 
+Note: `.reference/ENVORA_TDS_COMPLETE_v3.0.md` currently contains **19 `CREATE TABLE` blocks** in the schema section.
 
 ## Real-time
 
