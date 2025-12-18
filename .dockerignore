@@ -1,0 +1,19 @@
+# git / editor
+.git
+.github
+.idea
+.vscode
+.vs
+
+# dotnet build outputs
+**/bin
+**/obj
+
+# local env / secrets
+.env
+
+# docs / misc
+docs
+.reference
+
+

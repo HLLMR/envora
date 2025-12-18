@@ -1,0 +1,52 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    container_name: envora-sqlserver
+    environment:
+      ACCEPT_EULA: "Y"
+      SA_PASSWORD: ${SA_PASSWORD}
+      MSSQL_PID: ${MSSQL_PID:-Developer}
+    ports:
+      - "1433:1433"
+    volumes:
+      - sqlserver_data:/var/opt/mssql
+    networks:
+      - envora-network
+    healthcheck:
+      test: ["CMD-SHELL", "/opt/mssql-tools18/bin/sqlcmd -S localhost -U sa -P \"$$SA_PASSWORD\" -C -Q \"SELECT 1\" || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  web:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: envora-web
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:80}
+      ConnectionStrings__DefaultConnection: Server=sqlserver;Database=EnvoraDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+    ports:
+      - "8080:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - envora-network
+    volumes:
+      - app_data:/app/data
+
+volumes:
+  sqlserver_data:
+    name: envora_sqlserver_data
+  app_data:
+    name: envora_app_data
+
+networks:
+  envora-network:
+    driver: bridge
+    # Stable name so NGINX Proxy Manager can be connected once and stay consistent.
+    name: envora_envora-network
+
+

@@ -1,0 +1,28 @@
+**/.DS_Store
+**/.idea/
+**/.vscode/
+
+# Dotnet
+**/bin/
+**/obj/
+**/.vs/
+*.rsuser
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+*.nupkg
+*.snupkg
+*.cache
+*.log
+
+# Rider
+*.sln.iml
+
+# Secrets / local env
+.env
+
+# Docker
+**/.docker/**
+
+
