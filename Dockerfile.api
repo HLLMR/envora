@@ -3,13 +3,13 @@ FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
 WORKDIR /src
 
 # Copy project file(s) and restore
-COPY src/Envora.Web/Envora.Web.csproj ./src/Envora.Web/
+COPY src/Envora.Api/Envora.Api.csproj ./src/Envora.Api/
 COPY src/Envora.Domain/Envora.Domain.csproj ./src/Envora.Domain/
-RUN dotnet restore ./src/Envora.Web/Envora.Web.csproj
+RUN dotnet restore ./src/Envora.Api/Envora.Api.csproj
 
 # Copy everything else and build
 COPY . .
-WORKDIR /src/src/Envora.Web
+WORKDIR /src/src/Envora.Api
 RUN dotnet publish -c Release -o /app/publish /p:UseAppHost=false
 
 # Runtime stage
@@ -24,6 +24,6 @@ RUN groupadd -r appuser && useradd -r -g appuser appuser
 RUN chown -R appuser:appuser /app
 USER appuser
 
-ENTRYPOINT ["dotnet", "Envora.Web.dll"]
+ENTRYPOINT ["dotnet", "Envora.Api.dll"]
 
 

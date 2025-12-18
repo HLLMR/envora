@@ -18,7 +18,8 @@ This is a **fresh** Envora revision scaffolded from scratch.
 2. Start:
    - `docker compose up -d --build`
 3. Visit:
-   - `http://localhost:8080/`
+   - Web UI: `http://localhost:8080/`
+   - API: `http://localhost:5000/` (health: `/api/v1/health`, swagger: `/swagger`)
 
 ## Repo notes
 

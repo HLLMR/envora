@@ -19,6 +19,22 @@ services:
       retries: 5
       start_period: 60s
 
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile.api
+    container_name: envora-api
+    environment:
+      ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
+      ASPNETCORE_URLS: http://+:80
+      ConnectionStrings__DefaultConnection: Server=sqlserver;Database=EnvoraDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+    ports:
+      - "5000:80"
+    depends_on:
+      - sqlserver
+    networks:
+      - envora-network
+
   web:
     build:
       context: .
@@ -26,12 +42,12 @@ services:
     container_name: envora-web
     environment:
       ASPNETCORE_ENVIRONMENT: ${ASPNETCORE_ENVIRONMENT:-Development}
-      ASPNETCORE_URLS: ${ASPNETCORE_URLS:-http://+:80}
-      ConnectionStrings__DefaultConnection: Server=sqlserver;Database=EnvoraDb;User Id=sa;Password=${SA_PASSWORD};TrustServerCertificate=True;MultipleActiveResultSets=true
+      ASPNETCORE_URLS: http://+:80
+      Envora__ApiBaseUrl: ${ENVORA_API_BASE_URL:-http://envora-api}
     ports:
       - "8080:80"
     depends_on:
-      - sqlserver
+      - api
     networks:
       - envora-network
     volumes:
