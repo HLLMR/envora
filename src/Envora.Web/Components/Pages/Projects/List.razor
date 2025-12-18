@@ -1,0 +1,148 @@
+@page "/projects"
+
+<PageTitle>Projects</PageTitle>
+
+<div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+        <h1 class="h4 mb-1">Projects</h1>
+        <div class="text-secondary small">Browse and create projects</div>
+    </div>
+
+    <div class="d-flex gap-2">
+        <input class="form-control" style="min-width: 260px" placeholder="Search project number / name"
+               @bind="SearchTerm" @bind:event="oninput" />
+        <button class="btn btn-outline-secondary" @onclick="ReloadAsync">Search</button>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-secondary">Project #</label>
+                <input class="form-control" @bind="Create.ProjectNumber" />
+            </div>
+            <div class="col-12 col-md-5">
+                <label class="form-label small text-secondary">Name</label>
+                <input class="form-control" @bind="Create.ProjectName" />
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small text-secondary">Status</label>
+                <select class="form-select" @bind="Create.Status">
+                    <option value="Conceptual">Conceptual</option>
+                    <option value="Design">Design</option>
+                    <option value="Bidding">Bidding</option>
+                    <option value="Awarded">Awarded</option>
+                    <option value="Procurement">Procurement</option>
+                    <option value="Installation">Installation</option>
+                    <option value="Startup">Startup</option>
+                    <option value="Complete">Complete</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-primary" @onclick="CreateProjectAsync" disabled="@IsCreating">
+                    Create
+                </button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert alert-danger mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+            <tr>
+                <th style="width: 180px">Project #</th>
+                <th>Name</th>
+                <th style="width: 160px">Status</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (IsLoading)
+            {
+                <tr><td colspan="3" class="p-4 text-secondary">Loading…</td></tr>
+            }
+            else if (Page.Data.Count == 0)
+            {
+                <tr><td colspan="3" class="p-4 text-secondary">No projects yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var p in Page.Data)
+                {
+                    <tr style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{p.ProjectId}"))">
+                        <td class="fw-semibold">@p.ProjectNumber</td>
+                        <td>@p.ProjectName</td>
+                        <td><span class="badge text-bg-secondary">@p.Status</span></td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Inject] private IProjectsService Projects { get; set; } = null!;
+    [Inject] private NavigationManager Nav { get; set; } = null!;
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsCreating { get; set; }
+    private string? Error { get; set; }
+    private string SearchTerm { get; set; } = "";
+
+    private PaginatedResponse<ProjectListItemDto> Page { get; set; } = new();
+    private CreateProjectRequest Create { get; set; } = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        Error = null;
+        IsLoading = true;
+        try
+        {
+            Page = await Projects.ListAsync(skip: 0, take: 50, status: null, searchTerm: SearchTerm, ct: CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CreateProjectAsync()
+    {
+        Error = null;
+        IsCreating = true;
+        try
+        {
+            var created = await Projects.CreateAsync(Create, CancellationToken.None);
+            Create = new CreateProjectRequest();
+            await ReloadAsync();
+            Nav.NavigateTo($"/projects/{created.ProjectId}");
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsCreating = false;
+        }
+    }
+}
+
+

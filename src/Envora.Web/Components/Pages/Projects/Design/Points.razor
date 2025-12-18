@@ -1,0 +1,153 @@
+@page "/projects/{ProjectId:guid}/design/equipment/{EquipmentId:guid}/points"
+
+<PageTitle>Points</PageTitle>
+
+<div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+        <h1 class="h4 mb-1">Design · Points</h1>
+        <div class="text-secondary small">Project: @ProjectId · Equipment: @EquipmentId</div>
+    </div>
+    <div class="d-flex gap-2">
+        <button class="btn btn-outline-secondary" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment"))">Back to Equipment</button>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-4">
+                <label class="form-label small text-secondary">Point Tag</label>
+                <input class="form-control" @bind="Create.PointTag" />
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small text-secondary">Source</label>
+                <select class="form-select" @bind="Create.SourceType">
+                    <option value="SoftPoint">SoftPoint</option>
+                    <option value="HardPoint">HardPoint</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small text-secondary">Type</label>
+                <select class="form-select" @bind="Create.DataType">
+                    <option value="AnalogInput">AnalogInput</option>
+                    <option value="AnalogOutput">AnalogOutput</option>
+                    <option value="DigitalInput">DigitalInput</option>
+                    <option value="DigitalOutput">DigitalOutput</option>
+                    <option value="Integer">Integer</option>
+                    <option value="Real">Real</option>
+                    <option value="String">String</option>
+                    <option value="Enumeration">Enumeration</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-2">
+                <label class="form-label small text-secondary">Unit</label>
+                <input class="form-control" @bind="Create.Unit" />
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-primary" @onclick="CreatePointAsync" disabled="@IsCreating">Add</button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert alert-danger mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+            <tr>
+                <th style="width: 280px">Tag</th>
+                <th style="width: 140px">Source</th>
+                <th style="width: 180px">Data type</th>
+                <th style="width: 120px">Unit</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (IsLoading)
+            {
+                <tr><td colspan="4" class="p-4 text-secondary">Loading…</td></tr>
+            }
+            else if (List.Data.Count == 0)
+            {
+                <tr><td colspan="4" class="p-4 text-secondary">No points yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var p in List.Data)
+                {
+                    <tr>
+                        <td class="fw-semibold">@p.PointTag</td>
+                        <td><span class="badge text-bg-secondary">@p.SourceType</span></td>
+                        <td>@p.DataType</td>
+                        <td>@p.Unit</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public Guid EquipmentId { get; set; }
+
+    [Inject] private IPointsService PointsApi { get; set; } = null!;
+    [Inject] private NavigationManager Nav { get; set; } = null!;
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsCreating { get; set; }
+    private string? Error { get; set; }
+
+    private ListResponse<PointDto> List { get; set; } = new();
+    private CreatePointRequest Create { get; set; } = new() { SourceType = "SoftPoint", PointType = "Input", DataType = "AnalogInput" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        Error = null;
+        IsLoading = true;
+        try
+        {
+            List = await PointsApi.ListAsync(ProjectId, EquipmentId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CreatePointAsync()
+    {
+        Error = null;
+        IsCreating = true;
+        try
+        {
+            await PointsApi.CreateAsync(ProjectId, EquipmentId, Create, CancellationToken.None);
+            Create = new CreatePointRequest { SourceType = Create.SourceType, PointType = Create.PointType, DataType = Create.DataType };
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsCreating = false;
+        }
+    }
+}
+
+

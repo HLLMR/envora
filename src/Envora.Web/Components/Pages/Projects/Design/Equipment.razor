@@ -1,0 +1,139 @@
+@page "/projects/{ProjectId:guid}/design/equipment"
+
+<PageTitle>Equipment</PageTitle>
+
+<div class="d-flex align-items-start justify-content-between gap-3 flex-wrap">
+    <div>
+        <h1 class="h4 mb-1">Design · Equipment</h1>
+        <div class="text-secondary small">Project: @ProjectId</div>
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body">
+        <div class="row g-2 align-items-end">
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-secondary">Tag</label>
+                <input class="form-control" @bind="Create.EquipmentTag" />
+            </div>
+            <div class="col-12 col-md-3">
+                <label class="form-label small text-secondary">Type</label>
+                <select class="form-select" @bind="Create.EquipmentType">
+                    <option value="AHU">AHU</option>
+                    <option value="RTU">RTU</option>
+                    <option value="VAV">VAV</option>
+                    <option value="Pump">Pump</option>
+                    <option value="Fan">Fan</option>
+                    <option value="Chiller">Chiller</option>
+                    <option value="Boiler">Boiler</option>
+                    <option value="Other">Other</option>
+                </select>
+            </div>
+            <div class="col-12 col-md-4">
+                <label class="form-label small text-secondary">Location</label>
+                <input class="form-control" @bind="Create.Location" />
+            </div>
+            <div class="col-12 col-md-2 d-grid">
+                <button class="btn btn-primary" @onclick="CreateEquipmentAsync" disabled="@IsCreating">Add</button>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrWhiteSpace(Error))
+        {
+            <div class="alert alert-danger mt-3 mb-0">@Error</div>
+        }
+    </div>
+</div>
+
+<div class="card mt-3">
+    <div class="card-body p-0">
+        <table class="table table-hover mb-0">
+            <thead class="table-light">
+            <tr>
+                <th style="width: 180px">Tag</th>
+                <th style="width: 140px">Type</th>
+                <th>Location</th>
+            </tr>
+            </thead>
+            <tbody>
+            @if (IsLoading)
+            {
+                <tr><td colspan="3" class="p-4 text-secondary">Loading…</td></tr>
+            }
+            else if (List.Data.Count == 0)
+            {
+                <tr><td colspan="3" class="p-4 text-secondary">No equipment yet.</td></tr>
+            }
+            else
+            {
+                @foreach (var e in List.Data)
+                {
+                    <tr style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment/{e.EquipmentId}/points"))">
+                        <td class="fw-semibold">@e.EquipmentTag</td>
+                        <td><span class="badge text-bg-secondary">@e.EquipmentType</span></td>
+                        <td>@e.Location</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Inject] private IEquipmentService EquipmentApi { get; set; } = null!;
+    [Inject] private NavigationManager Nav { get; set; } = null!;
+
+    private bool IsLoading { get; set; } = true;
+    private bool IsCreating { get; set; }
+    private string? Error { get; set; }
+
+    private ListResponse<EquipmentDto> List { get; set; } = new();
+    private CreateEquipmentRequest Create { get; set; } = new() { EquipmentType = "AHU" };
+
+    protected override async Task OnInitializedAsync()
+    {
+        await ReloadAsync();
+    }
+
+    private async Task ReloadAsync()
+    {
+        Error = null;
+        IsLoading = true;
+        try
+        {
+            List = await EquipmentApi.ListAsync(ProjectId, CancellationToken.None);
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsLoading = false;
+        }
+    }
+
+    private async Task CreateEquipmentAsync()
+    {
+        Error = null;
+        IsCreating = true;
+        try
+        {
+            await EquipmentApi.CreateAsync(ProjectId, Create, CancellationToken.None);
+            Create = new CreateEquipmentRequest { EquipmentType = Create.EquipmentType };
+            await ReloadAsync();
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            IsCreating = false;
+        }
+    }
+}
+
+

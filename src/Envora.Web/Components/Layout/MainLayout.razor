@@ -1,6 +1,50 @@
 ﻿@inherits LayoutComponentBase
 
-@Body
+<div class="envora-shell">
+    <aside class="envora-sidebar">
+        <div class="px-3 py-3 border-bottom">
+            <div class="fw-semibold">Envora</div>
+            <div class="text-secondary small">vNext</div>
+        </div>
+
+        <nav class="p-2">
+            <div class="text-uppercase small text-secondary px-2 mt-2">General</div>
+            <ul class="nav nav-pills flex-column gap-1 px-1">
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/" Match="NavLinkMatch.All">Dashboard</NavLink>
+                </li>
+                <li class="nav-item">
+                    <NavLink class="nav-link" href="/projects">Projects</NavLink>
+                </li>
+            </ul>
+        </nav>
+
+        <div class="mt-auto p-3 border-top small text-secondary">
+            Private / Proprietary
+        </div>
+    </aside>
+
+    <main class="envora-main">
+        <header class="envora-header border-bottom bg-white">
+            <div class="container-fluid py-2 d-flex align-items-center justify-content-between">
+                <div class="fw-semibold">Envora</div>
+                <div class="text-secondary small">Connected to API</div>
+            </div>
+        </header>
+
+        <section class="envora-content">
+            <div class="container-fluid py-3">
+                @Body
+            </div>
+        </section>
+
+        <footer class="envora-notes border-top bg-light">
+            <div class="container-fluid py-2 small text-secondary">
+                Notes panel (Phase 1 placeholder)
+            </div>
+        </footer>
+    </main>
+</div>
 
 <div id="blazor-error-ui">
     An unhandled error has occurred.

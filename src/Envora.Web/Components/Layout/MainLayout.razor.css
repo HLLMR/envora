@@ -16,3 +16,45 @@
         right: 0.75rem;
         top: 0.5rem;
     }
+
+.envora-shell {
+    display: grid;
+    grid-template-columns: 260px 1fr;
+    min-height: 100vh;
+}
+
+.envora-sidebar {
+    display: flex;
+    flex-direction: column;
+    background: #0b1220;
+    color: #e5e7eb;
+}
+
+.envora-sidebar .nav-link {
+    color: #e5e7eb;
+}
+
+.envora-sidebar .nav-link.active {
+    background: rgba(255, 255, 255, 0.12);
+}
+
+.envora-main {
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    min-height: 100vh;
+}
+
+.envora-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+}
+
+.envora-content {
+    background: #f8fafc;
+}
+
+.envora-notes {
+    position: sticky;
+    bottom: 0;
+}
