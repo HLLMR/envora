@@ -11,6 +11,8 @@ builder.Services.AddDbContext<Envora.Api.Data.EnvoraDbContext>(options =>
 
 // App services
 builder.Services.AddScoped<Envora.Api.Services.Interfaces.IProjectService, Envora.Api.Services.Implementations.ProjectService>();
+builder.Services.AddScoped<Envora.Api.Services.Interfaces.IEquipmentService, Envora.Api.Services.Implementations.EquipmentService>();
+builder.Services.AddScoped<Envora.Api.Services.Interfaces.IPointService, Envora.Api.Services.Implementations.PointService>();
 
 // Swagger/OpenAPI (local dev convenience)
 builder.Services.AddEndpointsApiExplorer();
