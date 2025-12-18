@@ -48,6 +48,13 @@ public sealed class ProjectsController(IProjectService projects) : ControllerBas
         var deleted = await projects.DeleteAsync(projectId, ct);
         return deleted ? NoContent() : NotFound();
     }
+
+    [HttpGet("dashboard/stats")]
+    public async Task<IActionResult> GetDashboardStats(CancellationToken ct)
+    {
+        var stats = await projects.GetDashboardStatsAsync(ct);
+        return Ok(stats);
+    }
 }
 
 

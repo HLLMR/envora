@@ -27,6 +27,12 @@ public sealed class ProjectsService(HttpClient http) : IProjectsService
         res.EnsureSuccessStatusCode();
         return (await res.Content.ReadFromJsonAsync<ProjectListItemDto>(cancellationToken: ct))!;
     }
+
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct)
+    {
+        var result = await http.GetFromJsonAsync<DashboardStatsDto>("api/v1/projects/dashboard/stats", ct);
+        return result ?? new DashboardStatsDto();
+    }
 }
 
 

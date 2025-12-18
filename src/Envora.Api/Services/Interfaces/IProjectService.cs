@@ -21,6 +21,8 @@ public interface IProjectService
     Task<ProjectListItemDto?> UpdateAsync(Guid projectId, UpdateProjectRequest request, CancellationToken ct);
 
     Task<bool> DeleteAsync(Guid projectId, CancellationToken ct);
+
+    Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct);
 }
 
 

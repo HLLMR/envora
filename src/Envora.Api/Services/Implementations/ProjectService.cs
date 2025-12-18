@@ -5,6 +5,7 @@ using Envora.Api.Models.Requests;
 using Envora.Api.Models.Shared;
 using Envora.Api.Services.Interfaces;
 using Microsoft.EntityFrameworkCore;
+using System.Linq;
 
 namespace Envora.Api.Services.Implementations;
 
@@ -166,6 +167,41 @@ public sealed class ProjectService(EnvoraDbContext db) : IProjectService
         db.Projects.Remove(entity);
         await db.SaveChangesAsync(ct);
         return true;
+    }
+
+    public async Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct)
+    {
+        var projects = await db.Projects.AsNoTracking().ToListAsync(ct);
+        var equipment = await db.Equipment.AsNoTracking().CountAsync(ct);
+        var points = await db.Points.AsNoTracking().CountAsync(ct);
+
+        var projectsByStatus = projects
+            .GroupBy(p => p.Status ?? "Unknown")
+            .ToDictionary(g => g.Key, g => g.Count());
+
+        var activeProjects = projects.Count(p => 
+            p.Status != null && 
+            (p.Status.Equals("Active", StringComparison.OrdinalIgnoreCase) || 
+             p.Status.Equals("In Progress", StringComparison.OrdinalIgnoreCase)));
+
+        var completedProjects = projects.Count(p => 
+            p.Status != null && 
+            p.Status.Equals("Completed", StringComparison.OrdinalIgnoreCase));
+
+        var onHoldProjects = projects.Count(p => 
+            p.Status != null && 
+            p.Status.Equals("On Hold", StringComparison.OrdinalIgnoreCase));
+
+        return new DashboardStatsDto
+        {
+            TotalProjects = projects.Count,
+            ActiveProjects = activeProjects,
+            CompletedProjects = completedProjects,
+            OnHoldProjects = onHoldProjects,
+            ProjectsByStatus = projectsByStatus,
+            TotalEquipment = equipment,
+            TotalPoints = points
+        };
     }
 }
 

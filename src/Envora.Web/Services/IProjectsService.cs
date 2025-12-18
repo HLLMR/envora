@@ -8,6 +8,8 @@ public interface IProjectsService
     Task<PaginatedResponse<ProjectListItemDto>> ListAsync(int skip, int take, string? status, string? searchTerm, CancellationToken ct);
 
     Task<ProjectListItemDto> CreateAsync(CreateProjectRequest request, CancellationToken ct);
+
+    Task<DashboardStatsDto> GetDashboardStatsAsync(CancellationToken ct);
 }
 
 
