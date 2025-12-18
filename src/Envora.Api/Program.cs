@@ -5,6 +5,9 @@ var builder = WebApplication.CreateBuilder(args);
 // Controllers (spec expects controller pattern + versioned routes)
 builder.Services.AddControllers();
 
+// SignalR
+builder.Services.AddSignalR();
+
 // EF Core
 builder.Services.AddDbContext<Envora.Api.Data.EnvoraDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
@@ -17,6 +20,7 @@ builder.Services.AddScoped<Envora.Api.Services.Interfaces.IDeviceService, Envora
 builder.Services.AddScoped<Envora.Api.Services.Interfaces.IControllerService, Envora.Api.Services.Implementations.ControllerService>();
 builder.Services.AddScoped<Envora.Api.Services.Interfaces.INodeService, Envora.Api.Services.Implementations.NodeService>();
 builder.Services.AddScoped<Envora.Api.Services.Interfaces.IControllerIoSlotService, Envora.Api.Services.Implementations.ControllerIoSlotService>();
+builder.Services.AddScoped<Envora.Api.Services.Interfaces.INotesService, Envora.Api.Services.Implementations.NotesService>();
 
 // Swagger/OpenAPI (local dev convenience)
 builder.Services.AddEndpointsApiExplorer();
@@ -31,6 +35,9 @@ if (app.Environment.IsDevelopment())
 }
 
 app.MapControllers();
+
+// SignalR hub
+app.MapHub<Envora.Api.Hubs.ProjectHub>("/hubs/project");
 
 // Simple health endpoint for container/orchestrator checks
 app.MapGet("/health", () => Results.Ok(new { status = "ok", utc = DateTimeOffset.UtcNow }));

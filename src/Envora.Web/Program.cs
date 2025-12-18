@@ -23,6 +23,7 @@ builder.Services.AddScoped(sp => sp.GetRequiredService<IHttpClientFactory>().Cre
 builder.Services.AddScoped<IProjectsService, ProjectsService>();
 builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IPointsService, PointsService>();
+builder.Services.AddScoped<INotesService, NotesService>();
 
 var app = builder.Build();
 

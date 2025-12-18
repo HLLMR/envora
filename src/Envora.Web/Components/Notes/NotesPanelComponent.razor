@@ -1,0 +1,170 @@
+@using Envora.Web.Models.Notes
+@using Envora.Web.Services
+@inject INotesService NotesService
+
+<div class="notes-panel border-top mt-4 pt-3">
+    <div class="d-flex align-items-center justify-content-between mb-3">
+        <h5 class="mb-0">Notes</h5>
+        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleNewNoteForm">
+            @(showNewNoteForm ? "Cancel" : "Add Note")
+        </button>
+    </div>
+
+    @if (showNewNoteForm)
+    {
+        <div class="card mb-3">
+            <div class="card-body">
+                <EditForm Model="@newNote" OnValidSubmit="HandleCreateNote">
+                    <DataAnnotationsValidator />
+                    <div class="mb-2">
+                        <InputTextArea class="form-control" rows="3" placeholder="Write a note..." @bind-Value="newNote.Content" />
+                        <ValidationMessage For="() => newNote.Content" />
+                    </div>
+                    <div class="d-flex justify-content-end gap-2">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ToggleNewNoteForm">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-primary" disabled="@isCreating">@(isCreating ? "Creating..." : "Post")</button>
+                    </div>
+                </EditForm>
+            </div>
+        </div>
+    }
+
+    @if (isLoading)
+    {
+        <div class="text-center py-4">
+            <div class="spinner-border spinner-border-sm" role="status">
+                <span class="visually-hidden">Loading...</span>
+            </div>
+        </div>
+    }
+    else if (notes.Any())
+    {
+        <div class="notes-list">
+            @foreach (var note in notes.OrderByDescending(n => n.CreatedAt))
+            {
+                <div class="card mb-2">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-start mb-2">
+                            <div>
+                                <strong>@note.AuthorName</strong>
+                                <span class="text-secondary small ms-2">@note.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")</span>
+                                @if (note.EditedAt.HasValue)
+                                {
+                                    <span class="text-secondary small">(edited)</span>
+                                }
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="@(() => ToggleReaction(note.NoteId, "👍"))" title="Like">
+                                    👍 @(note.Reactions.GetValueOrDefault("👍", 0))
+                                </button>
+                                <button class="btn btn-sm btn-outline-secondary" @onclick="@(() => ToggleReaction(note.NoteId, "❤️"))" title="Love">
+                                    ❤️ @(note.Reactions.GetValueOrDefault("❤️", 0))
+                                </button>
+                            </div>
+                        </div>
+                        <div class="note-content">@note.Content</div>
+                        @if (note.Replies > 0)
+                        {
+                            <div class="text-secondary small mt-2">
+                                @note.Replies @(note.Replies == 1 ? "reply" : "replies")
+                            </div>
+                        }
+                    </div>
+                </div>
+            }
+        </div>
+    }
+    else
+    {
+        <div class="text-center text-secondary py-4">
+            <p>No notes yet. Be the first to add one!</p>
+        </div>
+    }
+</div>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    [Parameter] public string? Context { get; set; }
+
+    private List<NoteDto> notes = new();
+    private bool isLoading = true;
+    private bool showNewNoteForm = false;
+    private bool isCreating = false;
+    private CreateNoteRequest newNote = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadNotesAsync();
+    }
+
+    private async Task LoadNotesAsync()
+    {
+        isLoading = true;
+        try
+        {
+            // Parse context to extract discipline (format: "DISCIPLINE:TabName" or just "DISCIPLINE")
+            string? discipline = null;
+            if (!string.IsNullOrWhiteSpace(Context))
+            {
+                var parts = Context.Split(':', 2);
+                discipline = parts[0].Trim();
+            }
+
+            var result = await NotesService.ListAsync(ProjectId, 0, 50, discipline, null, CancellationToken.None);
+            notes = result.Data.ToList();
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void ToggleNewNoteForm()
+    {
+        showNewNoteForm = !showNewNoteForm;
+        if (!showNewNoteForm)
+        {
+            newNote = new CreateNoteRequest();
+        }
+    }
+
+    private async Task HandleCreateNote()
+    {
+        if (string.IsNullOrWhiteSpace(newNote.Content)) return;
+
+        isCreating = true;
+        try
+        {
+            newNote.ContentContext = Context;
+            var created = await NotesService.CreateAsync(ProjectId, newNote, CancellationToken.None);
+            notes.Insert(0, created);
+            newNote = new CreateNoteRequest();
+            showNewNoteForm = false;
+        }
+        finally
+        {
+            isCreating = false;
+        }
+    }
+
+    private async Task ToggleReaction(Guid noteId, string emoji)
+    {
+        try
+        {
+            var request = new AddReactionRequest { Emoji = emoji };
+            var reactions = await NotesService.AddReactionAsync(ProjectId, noteId, request, CancellationToken.None);
+            
+            // Update the note's reactions
+            var note = notes.FirstOrDefault(n => n.NoteId == noteId);
+            if (note != null)
+            {
+                note.Reactions = reactions;
+            }
+        }
+        catch
+        {
+            // Silently fail for now
+        }
+    }
+}
+

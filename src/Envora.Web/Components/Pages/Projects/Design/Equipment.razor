@@ -80,6 +80,8 @@
     </div>
 </div>
 
+<NotesPanelComponent ProjectId="@ProjectId" Context="DESIGN:Equipment" />
+
 @code {
     [Parameter] public Guid ProjectId { get; set; }
     [Inject] private IEquipmentService EquipmentApi { get; set; } = null!;
