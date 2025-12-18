@@ -29,4 +29,11 @@ This is a **fresh** Envora revision scaffolded from scratch.
 
 See `docs/nginx-proxy-manager.md`.
 
+## Course / roadmap (spec-aligned)
+
+- `docs/COURSE.md`
+- `docs/ROADMAP.md`
+- `docs/ARCHITECTURE.md`
+- `docs/BACKLOG.md`
+
 
