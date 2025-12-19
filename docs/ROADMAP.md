@@ -8,15 +8,18 @@ This roadmap is derived from `.reference/ENVORA_PRD.md` and the Phase 1 prompt i
 - Confirm RBAC roles and permissions expectations (spec-defined matrix)
 - Confirm “5 disciplines” navigation + persistent notes UX
 
-## Phase 1: Core Platform (3–4 weeks)
+## Phase 1: Core Platform (3–4 weeks) ✅ **COMPLETE**
 
 Deliverables:
 
-- Projects CRUD + team assignments
-- Equipment templates + Equipment CRUD
-- Points CRUD + (later) auto-point generation rules
-- Dashboard (KPIs, project list, team view)
-- Baseline Notes (real-time scaffolding)
+- ✅ Projects CRUD + team assignments
+- ✅ Equipment CRUD (templates - Phase 2)
+- ✅ Points CRUD (auto-point generation - Phase 2)
+- ✅ Dashboard (KPIs, project list, team view)
+- ✅ Baseline Notes (real-time scaffolding with SignalR)
+- ✅ Full editing capabilities for Projects, Equipment, Points
+- ✅ SignalR client-side integration
+- ✅ All discipline pages (Overview, Financial, Schedule, Design, Service)
 
 ## Phase 2: Reports & Data Export (2–3 weeks)
 

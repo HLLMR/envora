@@ -10,27 +10,33 @@ This is an implementation checklist derived from the reference bundle. Treat thi
 
 ## Database + EF Core
 
-- [ ] Implement EF Core entity model for v3.0 schema (22 tables)
-- [ ] Add migrations and document local migration workflow
+- [x] Implement EF Core entity model for v3.0 schema (22 tables)
+- [x] Add migrations and document local migration workflow
 - [ ] Seed minimal data for local dev (optional)
 
 ## API (Envora.Api)
 
 - [ ] Auth endpoints (local + Azure AD alternative)
-- [ ] CRUD: Projects
-- [ ] CRUD: Equipment
-- [ ] CRUD: Devices
-- [ ] CRUD: Controllers / Nodes / IO slots
-- [ ] CRUD: Points + soft point distribution
-- [ ] Notes endpoints + reactions
-- [ ] SignalR hub for notes + job status
+- [x] CRUD: Projects
+- [x] CRUD: Equipment
+- [x] CRUD: Devices
+- [x] CRUD: Controllers / Nodes / IO slots
+- [x] CRUD: Points + soft point distribution
+- [x] Notes endpoints + reactions
+- [x] SignalR hub for notes + job status
+- [x] Dashboard statistics endpoint
 
 ## Web (Envora.Web)
 
-- [ ] Implement layout (header + sidebar) aligned to UX plan
-- [ ] Dashboard page
-- [ ] Projects list + project detail shell
-- [ ] Discipline navigation (Overview/Financial/Schedule/Design/Service)
-- [ ] Persistent notes panel wiring (SignalR)
+- [x] Implement layout (header + sidebar) aligned to UX plan
+- [x] Dashboard page with KPIs and recent projects
+- [x] Projects list + project detail shell
+- [x] Project overview page with team assignments
+- [x] Discipline navigation (Overview/Financial/Schedule/Design/Service)
+- [x] Persistent notes panel wiring (SignalR)
+- [x] Equipment list with edit/delete
+- [x] Points list with edit/delete
+- [x] Project editing functionality
+- [x] SignalR client-side integration for real-time updates
 
 

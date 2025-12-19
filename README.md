@@ -2,13 +2,29 @@
 
 This is a **fresh** Envora revision scaffolded from scratch.
 
-## What’s included
+## What's included
 
-- **Docker Compose**: `web` + `sqlserver`
+- **Docker Compose**: `web` + `api` + `sqlserver`
 - **NGINX Proxy Manager (NPM)** friendly defaults:
   - Web container name: `envora-web`
-  - Internal upstream: `envora-web:80`
+  - API container name: `envora-api`
+  - Internal upstream: `envora-web:80`, `envora-api:80`
   - Compose network name: `envora_envora-network` (stable)
+
+## Phase 1 Status
+
+✅ **Core Platform Complete**
+
+**Implemented Features:**
+- Projects CRUD with team assignments
+- Equipment CRUD with edit/delete
+- Points CRUD with edit/delete
+- Devices, Controllers, Nodes, IO slots CRUD
+- Notes with real-time collaboration (SignalR)
+- Dashboard with KPIs and project statistics
+- Project detail pages with discipline navigation
+- SignalR client-side integration for real-time updates
+- Full editing capabilities for all entities
 
 ## Quick start (local)
 

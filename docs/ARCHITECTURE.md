@@ -19,20 +19,32 @@ This is a lightweight snapshot of the architecture described in:
 
 Use **v3.0** corrected model as source of truth:
 
-- Equipment ↔ Devices ↔ Points
-- Controllers ↔ Nodes ↔ IO slots
-- Soft point distribution (one-to-many distribution)
-- Collaboration (Notes + Reactions)
-- Operational traceability (Jobs + ActivityLogs)
+- Equipment ↔ Devices ↔ Points ✅ **Implemented**
+- Controllers ↔ Nodes ↔ IO slots ✅ **Implemented**
+- Soft point distribution (one-to-many distribution) ✅ **Schema ready**
+- Collaboration (Notes + Reactions) ✅ **Implemented**
+- Operational traceability (Jobs + ActivityLogs) - **Schema ready**
  
 Note: `.reference/ENVORA_TDS_COMPLETE_v3.0.md` currently contains **19 `CREATE TABLE` blocks** in the schema section.
+
+**Current Implementation Status:**
+- ✅ All 22 entities implemented in EF Core
+- ✅ Initial migration applied
+- ✅ Full CRUD operations for Projects, Equipment, Points, Devices, Controllers, Nodes, IO slots
+- ✅ Notes with reactions and real-time updates
 
 ## Real-time
 
 SignalR is used for:
 
-- Notes updates (create/update/delete/reactions)
-- Job status notifications (submittal generation pipeline)
+- Notes updates (create/update/delete/reactions) ✅ **Implemented**
+- Job status notifications (submittal generation pipeline) - **Phase 2**
+
+**Current Implementation:**
+- SignalR hub at `/hubs/project` with project group subscriptions
+- Client-side `HubConnectionService` with automatic reconnection
+- Real-time note updates across all connected clients
+- Event handlers: `NoteAdded`, `NoteUpdated`, `NoteDeleted`, `ReactionAdded`
 
 ## Cross-cutting concerns
 
