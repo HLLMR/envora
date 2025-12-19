@@ -1,4 +1,5 @@
 @page "/projects/{ProjectId:guid}/overview"
+@layout Layout.ProjectLayout
 
 <PageTitle>Project Overview</PageTitle>
 
@@ -10,9 +11,19 @@
         </div>
     </div>
 }
+else if (!string.IsNullOrWhiteSpace(errorMessage))
+{
+    <ErrorAlert Error="@errorMessage" ValidationErrors="@validationErrors" />
+    <div class="mt-3">
+        <a href="/projects" class="btn btn-outline-secondary">← Back to Projects</a>
+    </div>
+}
 else if (project == null)
 {
     <div class="alert alert-warning">Project not found.</div>
+    <div class="mt-3">
+        <a href="/projects" class="btn btn-outline-secondary">← Back to Projects</a>
+    </div>
 }
 else
 {
@@ -38,6 +49,7 @@ else
                         <button type="button" class="btn-close" @onclick="HideEditModal"></button>
                     </div>
                     <div class="modal-body">
+                        <ErrorAlert Error="@updateError" ValidationErrors="@updateValidationErrors" OnDismiss="() => { updateError = null; updateValidationErrors = null; }" />
                         <EditForm Model="@editRequest" OnValidSubmit="HandleUpdate">
                             <DataAnnotationsValidator />
                             <div class="mb-3">
@@ -111,21 +123,32 @@ else
         </div>
     }
 
-    <!-- Discipline Navigation -->
-    <div class="card mb-4">
-        <div class="card-body">
-            <div class="text-secondary small mb-2">Disciplines</div>
-            <div class="d-flex gap-2 flex-wrap">
-                <a class="btn btn-sm btn-primary" href="@($"/projects/{ProjectId}/overview")">Overview</a>
-                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/financial")">Financial</a>
-                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/schedule")">Schedule</a>
-                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/design/equipment")">Design</a>
-                <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/service")">Service</a>
-            </div>
-        </div>
-    </div>
+    <!-- Discipline Tabs -->
+    <ul class="nav nav-tabs mb-4" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "summary" ? "active" : "")" @onclick="@(() => activeTab = "summary")">Summary</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "team" ? "active" : "")" @onclick="@(() => activeTab = "team")">Team</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "documents" ? "active" : "")" @onclick="@(() => activeTab = "documents")">Documents</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "activity" ? "active" : "")" @onclick="@(() => activeTab = "activity")">Activity</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "notes" ? "active" : "")" @onclick="@(() => activeTab = "notes")">Notes</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link @(activeTab == "settings" ? "active" : "")" @onclick="@(() => activeTab = "settings")">Settings</button>
+        </li>
+    </ul>
 
-    <div class="row g-4">
+    <!-- Tab Content -->
+    @if (activeTab == "summary")
+    {
+        <div class="row g-4">
         <!-- Project Information -->
         <div class="col-12 col-lg-8">
             <div class="card">
@@ -243,9 +266,63 @@ else
             </div>
         </div>
     </div>
+    }
+    else if (activeTab == "team")
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Team</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">Team management coming soon.</p>
+            </div>
+        </div>
+    }
+    else if (activeTab == "documents")
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Documents</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">Document management coming soon.</p>
+            </div>
+        </div>
+    }
+    else if (activeTab == "activity")
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Activity</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">Activity log coming soon.</p>
+            </div>
+        </div>
+    }
+    else if (activeTab == "notes")
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Notes</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">Notes are available in the panel at the bottom of the page.</p>
+            </div>
+        </div>
+    }
+    else if (activeTab == "settings")
+    {
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">Settings</h5>
+            </div>
+            <div class="card-body">
+                <p class="text-secondary">Project settings coming soon.</p>
+            </div>
+        </div>
+    }
 
-    <!-- Notes Panel -->
-    <NotesPanelComponent ProjectId="@ProjectId" Context="OVERVIEW:Summary" />
 }
 
 @code {
@@ -263,11 +340,38 @@ else
         await LoadProjectAsync();
     }
 
+    private string? errorMessage;
+    private List<string>? validationErrors;
+    private string activeTab = "summary";
+
     private async Task LoadProjectAsync()
     {
         isLoading = true;
-        project = await Projects.GetDetailAsync(ProjectId, CancellationToken.None);
-        isLoading = false;
+        errorMessage = null;
+        validationErrors = null;
+        try
+        {
+            project = await Projects.GetDetailAsync(ProjectId, CancellationToken.None);
+            if (project == null)
+            {
+                errorMessage = "Project not found.";
+            }
+        }
+        catch (ApiException ex)
+        {
+            errorMessage = ex.Message;
+            validationErrors = ex.ValidationErrors;
+            project = null;
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"Error loading project: {ex.Message}";
+            project = null;
+        }
+        finally
+        {
+            isLoading = false;
+        }
     }
 
     private void ShowEditModal()
@@ -302,8 +406,13 @@ else
         showEditModal = false;
     }
 
+    private string? updateError;
+    private List<string>? updateValidationErrors;
+
     private async Task HandleUpdate()
     {
+        updateError = null;
+        updateValidationErrors = null;
         isUpdating = true;
         try
         {
@@ -313,6 +422,19 @@ else
                 await LoadProjectAsync();
                 HideEditModal();
             }
+            else
+            {
+                updateError = "Failed to update project. It may not exist.";
+            }
+        }
+        catch (ApiException ex)
+        {
+            updateError = ex.Message;
+            updateValidationErrors = ex.ValidationErrors;
+        }
+        catch (Exception ex)
+        {
+            updateError = $"Unexpected error: {ex.Message}";
         }
         finally
         {

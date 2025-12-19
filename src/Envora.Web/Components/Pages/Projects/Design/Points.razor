@@ -1,4 +1,5 @@
 @page "/projects/{ProjectId:guid}/design/equipment/{EquipmentId:guid}/points"
+@layout Layout.ProjectLayout
 
 <PageTitle>Points</PageTitle>
 
@@ -48,10 +49,7 @@
             </div>
         </div>
 
-        @if (!string.IsNullOrWhiteSpace(Error))
-        {
-            <div class="alert alert-danger mt-3 mb-0">@Error</div>
-        }
+        <ErrorAlert Error="@Error" ValidationErrors="@ValidationErrors" OnDismiss="() => { Error = null; ValidationErrors = null; }" />
     </div>
 </div>
 
@@ -160,6 +158,7 @@
     private bool isUpdating { get; set; }
     private bool showEditModal { get; set; }
     private string? Error { get; set; }
+    private List<string>? ValidationErrors { get; set; }
 
     private ListResponse<PointDto> List { get; set; } = new();
     private CreatePointRequest Create { get; set; } = new() { SourceType = "SoftPoint", PointType = "Input", DataType = "AnalogInput" };
@@ -174,14 +173,20 @@
     private async Task ReloadAsync()
     {
         Error = null;
+        ValidationErrors = null;
         IsLoading = true;
         try
         {
             List = await PointsApi.ListAsync(ProjectId, EquipmentId, CancellationToken.None);
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
             Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unexpected error: {ex.Message}";
         }
         finally
         {
@@ -192,6 +197,7 @@
     private async Task CreatePointAsync()
     {
         Error = null;
+        ValidationErrors = null;
         IsCreating = true;
         try
         {
@@ -199,9 +205,14 @@
             Create = new CreatePointRequest { SourceType = Create.SourceType, PointType = Create.PointType, DataType = Create.DataType };
             await ReloadAsync();
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
             Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unexpected error: {ex.Message}";
         }
         finally
         {
@@ -233,6 +244,7 @@
         if (editingPoint == null) return;
 
         Error = null;
+        ValidationErrors = null;
         isUpdating = true;
         try
         {
@@ -242,10 +254,19 @@
                 await ReloadAsync();
                 HideEditModal();
             }
+            else
+            {
+                Error = "Failed to update point. It may not exist.";
+            }
+        }
+        catch (ApiException ex)
+        {
+            Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = $"Unexpected error: {ex.Message}";
         }
         finally
         {
@@ -257,6 +278,7 @@
     {
         // TODO: Add proper confirmation dialog
         Error = null;
+        ValidationErrors = null;
         try
         {
             var deleted = await PointsApi.DeleteAsync(ProjectId, EquipmentId, pointId, CancellationToken.None);
@@ -264,10 +286,19 @@
             {
                 await ReloadAsync();
             }
+            else
+            {
+                Error = "Failed to delete point. It may not exist.";
+            }
+        }
+        catch (ApiException ex)
+        {
+            Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
         }
         catch (Exception ex)
         {
-            Error = ex.Message;
+            Error = $"Unexpected error: {ex.Message}";
         }
     }
 }

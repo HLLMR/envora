@@ -1,17 +1,44 @@
+/* Envora Design System - v2 */
+:root {
+    --envora-primary: #1A4A5E;
+    --envora-accent: #E67E22;
+    --envora-success: #10b981;
+    --envora-warning: #f59e0b;
+    --envora-error: #ef4444;
+    --envora-gray-50: #f9fafb;
+    --envora-gray-100: #f3f4f6;
+    --envora-gray-200: #e5e7eb;
+    --envora-gray-300: #d1d5db;
+    --envora-gray-400: #9ca3af;
+    --envora-gray-500: #6b7280;
+    --envora-gray-600: #4b5563;
+    --envora-gray-700: #374151;
+    --envora-gray-800: #1f2937;
+    --envora-gray-900: #111827;
+    --envora-spacing-unit: 4px;
+}
+
+/* Import Inter font */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+* {
+    font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
+
 h1:focus {
     outline: none;
 }
 
 .valid.modified:not([type=checkbox]) {
-    outline: 1px solid #26b050;
+    outline: 1px solid var(--envora-success);
 }
 
 .invalid {
-    outline: 1px solid #e50000;
+    outline: 1px solid var(--envora-error);
 }
 
 .validation-message {
-    color: #e50000;
+    color: var(--envora-error);
 }
 
 .blazor-error-boundary {

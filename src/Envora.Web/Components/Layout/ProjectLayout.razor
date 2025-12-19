@@ -1,0 +1,76 @@
+@inherits LayoutComponentBase
+@implements IDisposable
+@inject NavigationManager Navigation
+
+<CascadingValue Name="CurrentProjectId" Value="ProjectId">
+    <CascadingValue Name="NotesContext" Value="currentNotesContext">
+        <CascadingValue Name="ShowNotesPanel" Value="true">
+            @Body
+        </CascadingValue>
+    </CascadingValue>
+</CascadingValue>
+
+@code {
+    [Parameter] public Guid ProjectId { get; set; }
+    
+    private string currentNotesContext = "OVERVIEW:Summary";
+    
+    protected override void OnParametersSet()
+    {
+        UpdateContext();
+    }
+    
+    protected override void OnAfterRender(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Navigation.LocationChanged += OnLocationChanged;
+        }
+    }
+    
+    private void OnLocationChanged(object? sender, Microsoft.AspNetCore.Components.Routing.LocationChangedEventArgs e)
+    {
+        UpdateContext();
+        InvokeAsync(StateHasChanged);
+    }
+    
+    private void UpdateContext()
+    {
+        // Determine context from current route
+        var uri = Navigation.Uri;
+        if (uri.Contains("/overview"))
+        {
+            currentNotesContext = "OVERVIEW:Summary";
+        }
+        else if (uri.Contains("/financial"))
+        {
+            currentNotesContext = "FINANCIAL:Financials";
+        }
+        else if (uri.Contains("/schedule"))
+        {
+            currentNotesContext = "SCHEDULE:Timeline";
+        }
+        else if (uri.Contains("/design/equipment/") && uri.Contains("/points"))
+        {
+            currentNotesContext = "DESIGN:Points";
+        }
+        else if (uri.Contains("/design/equipment"))
+        {
+            currentNotesContext = "DESIGN:Equipment";
+        }
+        else if (uri.Contains("/service"))
+        {
+            currentNotesContext = "SERVICE:RFIs";
+        }
+        else
+        {
+            currentNotesContext = "OVERVIEW:Summary";
+        }
+    }
+    
+    public void Dispose()
+    {
+        Navigation.LocationChanged -= OnLocationChanged;
+    }
+}
+

@@ -25,6 +25,7 @@ builder.Services.AddScoped<IEquipmentService, EquipmentService>();
 builder.Services.AddScoped<IPointsService, PointsService>();
 builder.Services.AddScoped<INotesService, NotesService>();
 builder.Services.AddScoped<IHubConnectionService, HubConnectionService>();
+builder.Services.AddSingleton<IApiHealthService, ApiHealthService>();
 
 var app = builder.Build();
 

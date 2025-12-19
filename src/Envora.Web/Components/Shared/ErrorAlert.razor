@@ -1,0 +1,26 @@
+@if (!string.IsNullOrWhiteSpace(Error))
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @Error
+        @if (ValidationErrors != null && ValidationErrors.Count > 0)
+        {
+            <ul class="mb-0 mt-2">
+                @foreach (var validationError in ValidationErrors)
+                {
+                    <li>@validationError</li>
+                }
+            </ul>
+        }
+        @if (OnDismiss.HasDelegate)
+        {
+            <button type="button" class="btn-close" @onclick="OnDismiss"></button>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public string? Error { get; set; }
+    [Parameter] public List<string>? ValidationErrors { get; set; }
+    [Parameter] public EventCallback OnDismiss { get; set; }
+}
+

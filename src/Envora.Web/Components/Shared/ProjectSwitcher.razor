@@ -1,0 +1,65 @@
+@if (projects.Any())
+{
+    <div class="dropdown">
+        <button class="btn btn-sm btn-outline-secondary dropdown-toggle" type="button" data-bs-toggle="dropdown">
+            @if (currentProject != null)
+            {
+                <span>@currentProject.ProjectNumber: @currentProject.ProjectName</span>
+            }
+            else
+            {
+                <span>Select Project</span>
+            }
+        </button>
+        <ul class="dropdown-menu" style="max-height: 400px; overflow-y: auto; min-width: 300px;">
+            <li>
+                <a class="dropdown-item" href="/projects">
+                    <strong>All Projects</strong>
+                </a>
+            </li>
+            <li><hr class="dropdown-divider"></li>
+            @foreach (var project in projects.Take(10))
+            {
+                <li>
+                    <a class="dropdown-item @(currentProject?.ProjectId == project.ProjectId ? "active" : "")" 
+                       href="@($"/projects/{project.ProjectId}/overview")">
+                        <div class="fw-semibold">@project.ProjectNumber</div>
+                        <div class="text-secondary small">@project.ProjectName</div>
+                    </a>
+                </li>
+            }
+        </ul>
+    </div>
+}
+
+@code {
+    [Parameter] public Guid? CurrentProjectId { get; set; }
+    [Inject] private IProjectsService ProjectsService { get; set; } = null!;
+
+    private List<ProjectListItemDto> projects = new();
+    private ProjectListItemDto? currentProject;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadProjectsAsync();
+    }
+
+    private async Task LoadProjectsAsync()
+    {
+        try
+        {
+            var result = await ProjectsService.ListAsync(0, 50, null, null, CancellationToken.None);
+            projects = result.Data.ToList();
+            
+            if (CurrentProjectId.HasValue)
+            {
+                currentProject = projects.FirstOrDefault(p => p.ProjectId == CurrentProjectId.Value);
+            }
+        }
+        catch
+        {
+            // Silently fail
+        }
+    }
+}
+

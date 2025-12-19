@@ -1,4 +1,5 @@
 @page "/projects/{ProjectId:guid}/service"
+@layout Layout.ProjectLayout
 
 <PageTitle>Service</PageTitle>
 
@@ -9,19 +10,24 @@
     </div>
 </div>
 
-<!-- Discipline Navigation -->
-<div class="card mb-4">
-    <div class="card-body">
-        <div class="text-secondary small mb-2">Disciplines</div>
-        <div class="d-flex gap-2 flex-wrap">
-            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/overview")">Overview</a>
-            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/financial")">Financial</a>
-            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/schedule")">Schedule</a>
-            <a class="btn btn-sm btn-outline-secondary" href="@($"/projects/{ProjectId}/design/equipment")">Design</a>
-            <a class="btn btn-sm btn-primary" href="@($"/projects/{ProjectId}/service")">Service</a>
-        </div>
-    </div>
-</div>
+<!-- Discipline Tabs -->
+<ul class="nav nav-tabs mb-4" role="tablist">
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link active" href="@($"/projects/{ProjectId}/service")">RFIs</NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="@($"/projects/{ProjectId}/service/issues")">Issues</NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link" href="@($"/projects/{ProjectId}/service/ioms")">IOMs</NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link disabled" href="#">Commissioning <span class="badge bg-secondary">v2</span></NavLink>
+    </li>
+    <li class="nav-item" role="presentation">
+        <NavLink class="nav-link disabled" href="#">Warranty Claims <span class="badge bg-secondary">v2</span></NavLink>
+    </li>
+</ul>
 
 <div class="card">
     <div class="card-body">
@@ -31,8 +37,6 @@
         </div>
     </div>
 </div>
-
-<NotesPanelComponent ProjectId="@ProjectId" Context="SERVICE:Summary" />
 
 @code {
     [Parameter] public Guid ProjectId { get; set; }

@@ -17,39 +17,42 @@
 
 <div class="card mt-3">
     <div class="card-body">
-        <div class="row g-2 align-items-end">
-            <div class="col-12 col-md-3">
-                <label class="form-label small text-secondary">Project #</label>
-                <input class="form-control" @bind="Create.ProjectNumber" />
+        <EditForm Model="@Create" OnValidSubmit="CreateProjectAsync">
+            <DataAnnotationsValidator />
+            <div class="row g-2 align-items-end">
+                <div class="col-12 col-md-3">
+                    <label class="form-label small text-secondary">Project # *</label>
+                    <InputText class="form-control" @bind-Value="Create.ProjectNumber" />
+                    <ValidationMessage For="() => Create.ProjectNumber" />
+                </div>
+                <div class="col-12 col-md-5">
+                    <label class="form-label small text-secondary">Name *</label>
+                    <InputText class="form-control" @bind-Value="Create.ProjectName" />
+                    <ValidationMessage For="() => Create.ProjectName" />
+                </div>
+                <div class="col-12 col-md-2">
+                    <label class="form-label small text-secondary">Status *</label>
+                    <InputSelect class="form-select" @bind-Value="Create.Status">
+                        <option value="Conceptual">Conceptual</option>
+                        <option value="Design">Design</option>
+                        <option value="Bidding">Bidding</option>
+                        <option value="Awarded">Awarded</option>
+                        <option value="Procurement">Procurement</option>
+                        <option value="Installation">Installation</option>
+                        <option value="Startup">Startup</option>
+                        <option value="Complete">Complete</option>
+                    </InputSelect>
+                    <ValidationMessage For="() => Create.Status" />
+                </div>
+                <div class="col-12 col-md-2 d-grid">
+                    <button type="submit" class="btn btn-primary" disabled="@IsCreating">
+                        @(IsCreating ? "Creating..." : "Create")
+                    </button>
+                </div>
             </div>
-            <div class="col-12 col-md-5">
-                <label class="form-label small text-secondary">Name</label>
-                <input class="form-control" @bind="Create.ProjectName" />
-            </div>
-            <div class="col-12 col-md-2">
-                <label class="form-label small text-secondary">Status</label>
-                <select class="form-select" @bind="Create.Status">
-                    <option value="Conceptual">Conceptual</option>
-                    <option value="Design">Design</option>
-                    <option value="Bidding">Bidding</option>
-                    <option value="Awarded">Awarded</option>
-                    <option value="Procurement">Procurement</option>
-                    <option value="Installation">Installation</option>
-                    <option value="Startup">Startup</option>
-                    <option value="Complete">Complete</option>
-                </select>
-            </div>
-            <div class="col-12 col-md-2 d-grid">
-                <button class="btn btn-primary" @onclick="CreateProjectAsync" disabled="@IsCreating">
-                    Create
-                </button>
-            </div>
-        </div>
+        </EditForm>
 
-        @if (!string.IsNullOrWhiteSpace(Error))
-        {
-            <div class="alert alert-danger mt-3 mb-0">@Error</div>
-        }
+        <ErrorAlert Error="@Error" ValidationErrors="@ValidationErrors" OnDismiss="() => { Error = null; ValidationErrors = null; }" />
     </div>
 </div>
 
@@ -95,6 +98,7 @@
     private bool IsLoading { get; set; } = true;
     private bool IsCreating { get; set; }
     private string? Error { get; set; }
+    private List<string>? ValidationErrors { get; set; }
     private string SearchTerm { get; set; } = "";
 
     private PaginatedResponse<ProjectListItemDto> Page { get; set; } = new();
@@ -108,14 +112,20 @@
     private async Task ReloadAsync()
     {
         Error = null;
+        ValidationErrors = null;
         IsLoading = true;
         try
         {
             Page = await Projects.ListAsync(skip: 0, take: 50, status: null, searchTerm: SearchTerm, ct: CancellationToken.None);
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
             Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unexpected error: {ex.Message}";
         }
         finally
         {
@@ -126,6 +136,7 @@
     private async Task CreateProjectAsync()
     {
         Error = null;
+        ValidationErrors = null;
         IsCreating = true;
         try
         {
@@ -134,9 +145,14 @@
             await ReloadAsync();
             Nav.NavigateTo($"/projects/{created.ProjectId}");
         }
-        catch (Exception ex)
+        catch (ApiException ex)
         {
             Error = ex.Message;
+            ValidationErrors = ex.ValidationErrors;
+        }
+        catch (Exception ex)
+        {
+            Error = $"Unexpected error: {ex.Message}";
         }
         finally
         {

@@ -4,32 +4,20 @@
 @inject INotesService NotesService
 @inject IHubConnectionService HubService
 
-<div class="notes-panel border-top mt-4 pt-3">
-    <div class="d-flex align-items-center justify-content-between mb-3">
-        <h5 class="mb-0">Notes</h5>
-        <button class="btn btn-sm btn-outline-primary" @onclick="ToggleNewNoteForm">
-            @(showNewNoteForm ? "Cancel" : "Add Note")
-        </button>
-    </div>
-
-    @if (showNewNoteForm)
-    {
-        <div class="card mb-3">
-            <div class="card-body">
-                <EditForm Model="@newNote" OnValidSubmit="HandleCreateNote">
-                    <DataAnnotationsValidator />
-                    <div class="mb-2">
-                        <InputTextArea class="form-control" rows="3" placeholder="Write a note..." @bind-Value="newNote.Content" />
-                        <ValidationMessage For="() => newNote.Content" />
-                    </div>
-                    <div class="d-flex justify-content-end gap-2">
-                        <button type="button" class="btn btn-sm btn-outline-secondary" @onclick="ToggleNewNoteForm">Cancel</button>
-                        <button type="submit" class="btn btn-sm btn-primary" disabled="@isCreating">@(isCreating ? "Creating..." : "Post")</button>
-                    </div>
-                </EditForm>
+<div class="notes-panel">
+    <div class="mb-3">
+        <h6 class="mb-2 fw-semibold">Notes</h6>
+        <EditForm Model="@newNote" OnValidSubmit="HandleCreateNote">
+            <DataAnnotationsValidator />
+            <div class="mb-2">
+                <InputTextArea class="form-control form-control-sm" rows="2" placeholder="Write a note..." @bind-Value="newNote.Content" />
+                <ValidationMessage For="() => newNote.Content" />
             </div>
-        </div>
-    }
+            <div class="d-flex justify-content-end gap-2">
+                <button type="submit" class="btn btn-sm btn-primary" disabled="@isCreating">@(isCreating ? "Posting..." : "Post")</button>
+            </div>
+        </EditForm>
+    </div>
 
     @if (isLoading)
     {
@@ -42,38 +30,28 @@
     else if (notes.Any())
     {
         <div class="notes-list">
-            @foreach (var note in notes.OrderByDescending(n => n.CreatedAt))
-            {
-                <div class="card mb-2">
-                    <div class="card-body">
-                        <div class="d-flex justify-content-between align-items-start mb-2">
-                            <div>
+            <div style="max-height: 200px; overflow-y: auto;">
+                @foreach (var note in notes.OrderByDescending(n => n.CreatedAt))
+                {
+                    <div class="border-bottom pb-2 mb-2">
+                        <div class="d-flex justify-content-between align-items-start mb-1">
+                            <div class="small">
                                 <strong>@note.AuthorName</strong>
-                                <span class="text-secondary small ms-2">@note.CreatedAt.ToString("MMM d, yyyy 'at' h:mm tt")</span>
-                                @if (note.EditedAt.HasValue)
-                                {
-                                    <span class="text-secondary small">(edited)</span>
-                                }
+                                <span class="text-secondary ms-2">@note.CreatedAt.ToString("MMM d 'at' h:mm tt")</span>
                             </div>
                             <div class="btn-group btn-group-sm">
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="@(() => ToggleReaction(note.NoteId, "👍"))" title="Like">
-                                    👍 @(note.Reactions.GetValueOrDefault("👍", 0))
+                                <button class="btn btn-sm btn-link text-decoration-none p-0 me-2" @onclick="@(() => ToggleReaction(note.NoteId, "👍"))" title="Like">
+                                    👍 @(note.Reactions.GetValueOrDefault("👍", 0) > 0 ? note.Reactions["👍"].ToString() : "")
                                 </button>
-                                <button class="btn btn-sm btn-outline-secondary" @onclick="@(() => ToggleReaction(note.NoteId, "❤️"))" title="Love">
-                                    ❤️ @(note.Reactions.GetValueOrDefault("❤️", 0))
+                                <button class="btn btn-sm btn-link text-decoration-none p-0" @onclick="@(() => ToggleReaction(note.NoteId, "❤️"))" title="Love">
+                                    ❤️ @(note.Reactions.GetValueOrDefault("❤️", 0) > 0 ? note.Reactions["❤️"].ToString() : "")
                                 </button>
                             </div>
                         </div>
-                        <div class="note-content">@note.Content</div>
-                        @if (note.Replies > 0)
-                        {
-                            <div class="text-secondary small mt-2">
-                                @note.Replies @(note.Replies == 1 ? "reply" : "replies")
-                            </div>
-                        }
+                        <div class="small">@note.Content</div>
                     </div>
-                </div>
-            }
+                }
+            </div>
         </div>
     }
     else
@@ -90,7 +68,6 @@
 
     private List<NoteDto> notes = new();
     private bool isLoading = true;
-    private bool showNewNoteForm = false;
     private bool isCreating = false;
     private CreateNoteRequest newNote = new();
 
@@ -139,15 +116,6 @@
         }
     }
 
-    private void ToggleNewNoteForm()
-    {
-        showNewNoteForm = !showNewNoteForm;
-        if (!showNewNoteForm)
-        {
-            newNote = new CreateNoteRequest();
-        }
-    }
-
     private async Task HandleCreateNote()
     {
         if (string.IsNullOrWhiteSpace(newNote.Content)) return;
@@ -159,7 +127,7 @@
             var created = await NotesService.CreateAsync(ProjectId, newNote, CancellationToken.None);
             notes.Insert(0, created);
             newNote = new CreateNoteRequest();
-            showNewNoteForm = false;
+            StateHasChanged();
         }
         finally
         {
