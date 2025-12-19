@@ -64,16 +64,17 @@
                 <th style="width: 140px">Source</th>
                 <th style="width: 180px">Data type</th>
                 <th style="width: 120px">Unit</th>
+                <th style="width: 100px">Actions</th>
             </tr>
             </thead>
             <tbody>
             @if (IsLoading)
             {
-                <tr><td colspan="4" class="p-4 text-secondary">Loading…</td></tr>
+                <tr><td colspan="5" class="p-4 text-secondary">Loading…</td></tr>
             }
             else if (List.Data.Count == 0)
             {
-                <tr><td colspan="4" class="p-4 text-secondary">No points yet.</td></tr>
+                <tr><td colspan="5" class="p-4 text-secondary">No points yet.</td></tr>
             }
             else
             {
@@ -84,6 +85,12 @@
                         <td><span class="badge text-bg-secondary">@p.SourceType</span></td>
                         <td>@p.DataType</td>
                         <td>@p.Unit</td>
+                        <td>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="@(() => ShowEditModal(p))" title="Edit">✏️</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="@(() => DeletePointAsync(p.PointId))" title="Delete">🗑️</button>
+                            </div>
+                        </td>
                     </tr>
                 }
             }
@@ -91,6 +98,55 @@
         </table>
     </div>
 </div>
+
+<!-- Edit Modal -->
+@if (showEditModal && editingPoint != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Point</h5>
+                    <button type="button" class="btn-close" @onclick="HideEditModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@editRequest" OnValidSubmit="HandleUpdate">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label class="form-label">Point Type</label>
+                            <InputText class="form-control" @bind-Value="editRequest.PointType" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Data Type</label>
+                            <InputSelect class="form-select" @bind-Value="editRequest.DataType">
+                                <option value="AnalogInput">AnalogInput</option>
+                                <option value="AnalogOutput">AnalogOutput</option>
+                                <option value="DigitalInput">DigitalInput</option>
+                                <option value="DigitalOutput">DigitalOutput</option>
+                                <option value="Integer">Integer</option>
+                                <option value="Real">Real</option>
+                                <option value="String">String</option>
+                                <option value="Enumeration">Enumeration</option>
+                            </InputSelect>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Unit</label>
+                            <InputText class="form-control" @bind-Value="editRequest.Unit" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="editRequest.PointDescription" />
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isUpdating">@(isUpdating ? "Saving..." : "Save")</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     [Parameter] public Guid ProjectId { get; set; }
@@ -101,10 +157,14 @@
 
     private bool IsLoading { get; set; } = true;
     private bool IsCreating { get; set; }
+    private bool isUpdating { get; set; }
+    private bool showEditModal { get; set; }
     private string? Error { get; set; }
 
     private ListResponse<PointDto> List { get; set; } = new();
     private CreatePointRequest Create { get; set; } = new() { SourceType = "SoftPoint", PointType = "Input", DataType = "AnalogInput" };
+    private PointDto? editingPoint;
+    private UpdatePointRequest editRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -146,6 +206,68 @@
         finally
         {
             IsCreating = false;
+        }
+    }
+
+    private void ShowEditModal(PointDto point)
+    {
+        editingPoint = point;
+        editRequest = new UpdatePointRequest
+        {
+            PointType = point.PointType,
+            DataType = point.DataType,
+            Unit = point.Unit,
+            PointDescription = point.PointDescription
+        };
+        showEditModal = true;
+    }
+
+    private void HideEditModal()
+    {
+        showEditModal = false;
+        editingPoint = null;
+    }
+
+    private async Task HandleUpdate()
+    {
+        if (editingPoint == null) return;
+
+        Error = null;
+        isUpdating = true;
+        try
+        {
+            var updated = await PointsApi.UpdateAsync(ProjectId, EquipmentId, editingPoint.PointId, editRequest, CancellationToken.None);
+            if (updated != null)
+            {
+                await ReloadAsync();
+                HideEditModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private async Task DeletePointAsync(Guid pointId)
+    {
+        // TODO: Add proper confirmation dialog
+        Error = null;
+        try
+        {
+            var deleted = await PointsApi.DeleteAsync(ProjectId, EquipmentId, pointId, CancellationToken.None);
+            if (deleted)
+            {
+                await ReloadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
         }
     }
 }

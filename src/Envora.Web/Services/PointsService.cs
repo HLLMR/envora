@@ -23,6 +23,25 @@ public sealed class PointsService(HttpClient http) : IPointsService
         res.EnsureSuccessStatusCode();
         return (await res.Content.ReadFromJsonAsync<PointDto>(cancellationToken: ct))!;
     }
+
+    public async Task<PointDto?> UpdateAsync(Guid projectId, Guid equipmentId, Guid pointId, UpdatePointRequest request, CancellationToken ct)
+    {
+        var res = await http.PatchAsJsonAsync(
+            $"api/v1/projects/{projectId}/equipment/{equipmentId}/points/{pointId}",
+            request,
+            ct);
+        if (res.StatusCode == System.Net.HttpStatusCode.NotFound) return null;
+        res.EnsureSuccessStatusCode();
+        return await res.Content.ReadFromJsonAsync<PointDto>(cancellationToken: ct);
+    }
+
+    public async Task<bool> DeleteAsync(Guid projectId, Guid equipmentId, Guid pointId, CancellationToken ct)
+    {
+        var res = await http.DeleteAsync(
+            $"api/v1/projects/{projectId}/equipment/{equipmentId}/points/{pointId}",
+            ct);
+        return res.IsSuccessStatusCode;
+    }
 }
 
 

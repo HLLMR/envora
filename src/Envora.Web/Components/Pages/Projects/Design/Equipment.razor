@@ -53,25 +53,32 @@
                 <th style="width: 180px">Tag</th>
                 <th style="width: 140px">Type</th>
                 <th>Location</th>
+                <th style="width: 100px">Actions</th>
             </tr>
             </thead>
             <tbody>
             @if (IsLoading)
             {
-                <tr><td colspan="3" class="p-4 text-secondary">Loading…</td></tr>
+                <tr><td colspan="4" class="p-4 text-secondary">Loading…</td></tr>
             }
             else if (List.Data.Count == 0)
             {
-                <tr><td colspan="3" class="p-4 text-secondary">No equipment yet.</td></tr>
+                <tr><td colspan="4" class="p-4 text-secondary">No equipment yet.</td></tr>
             }
             else
             {
                 @foreach (var e in List.Data)
                 {
-                    <tr style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment/{e.EquipmentId}/points"))">
-                        <td class="fw-semibold">@e.EquipmentTag</td>
-                        <td><span class="badge text-bg-secondary">@e.EquipmentType</span></td>
-                        <td>@e.Location</td>
+                    <tr>
+                        <td class="fw-semibold" style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment/{e.EquipmentId}/points"))">@e.EquipmentTag</td>
+                        <td style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment/{e.EquipmentId}/points"))"><span class="badge text-bg-secondary">@e.EquipmentType</span></td>
+                        <td style="cursor: pointer" @onclick="@(() => Nav.NavigateTo($"/projects/{ProjectId}/design/equipment/{e.EquipmentId}/points"))">@e.Location</td>
+                        <td>
+                            <div class="btn-group btn-group-sm" @onclick:stopPropagation="true">
+                                <button class="btn btn-sm btn-outline-primary" @onclick="@(() => ShowEditModal(e))" title="Edit">✏️</button>
+                                <button class="btn btn-sm btn-outline-danger" @onclick="@(() => DeleteEquipmentAsync(e.EquipmentId))" title="Delete">🗑️</button>
+                            </div>
+                        </td>
                     </tr>
                 }
             }
@@ -82,6 +89,63 @@
 
 <NotesPanelComponent ProjectId="@ProjectId" Context="DESIGN:Equipment" />
 
+<!-- Edit Modal -->
+@if (showEditModal && editingEquipment != null)
+{
+    <div class="modal show d-block" tabindex="-1" style="background-color: rgba(0,0,0,0.5);">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Edit Equipment</h5>
+                    <button type="button" class="btn-close" @onclick="HideEditModal"></button>
+                </div>
+                <div class="modal-body">
+                    <EditForm Model="@editRequest" OnValidSubmit="HandleUpdate">
+                        <DataAnnotationsValidator />
+                        <div class="mb-3">
+                            <label class="form-label">Tag</label>
+                            <InputText class="form-control" @bind-Value="editRequest.EquipmentTag" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Type</label>
+                            <InputSelect class="form-select" @bind-Value="editRequest.EquipmentType">
+                                <option value="AHU">AHU</option>
+                                <option value="RTU">RTU</option>
+                                <option value="VAV">VAV</option>
+                                <option value="Pump">Pump</option>
+                                <option value="Fan">Fan</option>
+                                <option value="Chiller">Chiller</option>
+                                <option value="Boiler">Boiler</option>
+                                <option value="Other">Other</option>
+                            </InputSelect>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Manufacturer</label>
+                            <InputText class="form-control" @bind-Value="editRequest.Manufacturer" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Model</label>
+                            <InputText class="form-control" @bind-Value="editRequest.Model" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Location</label>
+                            <InputText class="form-control" @bind-Value="editRequest.Location" />
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">Description</label>
+                            <InputTextArea class="form-control" rows="3" @bind-Value="editRequest.Description" />
+                        </div>
+                        <div class="d-flex justify-content-end gap-2">
+                            <button type="button" class="btn btn-secondary" @onclick="HideEditModal">Cancel</button>
+                            <button type="submit" class="btn btn-primary" disabled="@isUpdating">@(isUpdating ? "Saving..." : "Save")</button>
+                        </div>
+                    </EditForm>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 @code {
     [Parameter] public Guid ProjectId { get; set; }
     [Inject] private IEquipmentService EquipmentApi { get; set; } = null!;
@@ -89,10 +153,15 @@
 
     private bool IsLoading { get; set; } = true;
     private bool IsCreating { get; set; }
+    private bool isUpdating { get; set; }
+    private bool isDeleting { get; set; }
+    private bool showEditModal { get; set; }
     private string? Error { get; set; }
 
     private ListResponse<EquipmentDto> List { get; set; } = new();
     private CreateEquipmentRequest Create { get; set; } = new() { EquipmentType = "AHU" };
+    private EquipmentDto? editingEquipment;
+    private UpdateEquipmentRequest editRequest = new();
 
     protected override async Task OnInitializedAsync()
     {
@@ -134,6 +203,77 @@
         finally
         {
             IsCreating = false;
+        }
+    }
+
+    private void ShowEditModal(EquipmentDto equipment)
+    {
+        editingEquipment = equipment;
+        editRequest = new UpdateEquipmentRequest
+        {
+            EquipmentTag = equipment.EquipmentTag,
+            EquipmentType = equipment.EquipmentType,
+            Manufacturer = equipment.Manufacturer,
+            Model = equipment.Model,
+            Location = equipment.Location,
+            Description = equipment.Description
+        };
+        showEditModal = true;
+    }
+
+    private void HideEditModal()
+    {
+        showEditModal = false;
+        editingEquipment = null;
+    }
+
+    private async Task HandleUpdate()
+    {
+        if (editingEquipment == null) return;
+
+        Error = null;
+        isUpdating = true;
+        try
+        {
+            var updated = await EquipmentApi.UpdateAsync(ProjectId, editingEquipment.EquipmentId, editRequest, CancellationToken.None);
+            if (updated != null)
+            {
+                await ReloadAsync();
+                HideEditModal();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            isUpdating = false;
+        }
+    }
+
+    private async Task DeleteEquipmentAsync(Guid equipmentId)
+    {
+        // TODO: Add proper confirmation dialog
+        Error = null;
+
+        Error = null;
+        isDeleting = true;
+        try
+        {
+            var deleted = await EquipmentApi.DeleteAsync(ProjectId, equipmentId, CancellationToken.None);
+            if (deleted)
+            {
+                await ReloadAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            Error = ex.Message;
+        }
+        finally
+        {
+            isDeleting = false;
         }
     }
 }
